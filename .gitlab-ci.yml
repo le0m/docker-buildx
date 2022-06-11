@@ -9,9 +9,8 @@
 .build_services: &build_services
   script:
     - echo ${CI_JOB_TOKEN} | docker login --username gitlab-ci-token --password-stdin ${CI_REGISTRY}
-    - docker build --tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG} --tag ${CI_REGISTRY_IMAGE}:latest .
+    - docker build --tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG} .
     - docker push ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
-    - docker push ${CI_REGISTRY_IMAGE}:latest
 
 docker-buildx:build:
   image: docker:19.03
