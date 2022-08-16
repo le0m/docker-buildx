@@ -4,16 +4,29 @@
     DOCKER_HOST: tcp://docker:2376
     DOCKER_DRIVER: overlay2
   services:
-    - docker:19.03-dind
+    - docker:20.10-dind
 
 .build_services: &build_services
   script:
     - echo ${CI_JOB_TOKEN} | docker login --username gitlab-ci-token --password-stdin ${CI_REGISTRY}
-    - docker build --tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG} .
+    - docker build --tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG} --tag ${CI_REGISTRY_IMAGE}:latest .
     - docker push ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
+    - docker push ${CI_REGISTRY_IMAGE}:latest
 
-docker-buildx:build:
+stages:
+  - test
+  - release
+
+docker-buildx:test:
+  image: docker:20.10
+  stage: test
+  <<: *dind_service
+  script:
+    - docker build --tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA} .
+
+docker-buildx:release:
   image: docker:19.03
+  stage: release
   only:
     - tags
   <<: *dind_service
