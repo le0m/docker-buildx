@@ -1,10 +1,14 @@
+stages:
+  - test
+  - release
+
 .dind_service: &dind_service
   variables:
     DOCKER_TLS_CERTDIR: "/certs"
     DOCKER_HOST: tcp://docker:2376
     DOCKER_DRIVER: overlay2
   services:
-    - docker:19.03-dind
+    - docker:20.10-dind
 
 .build_services: &build_services
   script:
@@ -12,8 +16,17 @@
     - docker build --tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG} .
     - docker push ${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}
 
-docker-buildx:build:
+docker-buildx:test:
+  image: docker:20.10
+  stage: test
+  interruptible: true
+  <<: *dind_service
+  script:
+    - docker build --tag ${CI_REGISTRY_IMAGE}:${CI_COMMIT_SHORT_SHA} .
+
+docker-buildx:release:
   image: docker:19.03
+  stage: release
   only:
     - tags
   <<: *dind_service
